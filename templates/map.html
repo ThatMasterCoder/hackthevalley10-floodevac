@@ -93,11 +93,21 @@
     }).addTo(map);
     var marker;
     var routeLayer = null;
+    var routeLayers = []; // Array to track multiple route layers
+    
     function clearRoute() {
+        // Clear the main route layer
         if (routeLayer) {
             map.removeLayer(routeLayer);
             routeLayer = null;
         }
+        // Clear all route layers from the array
+        routeLayers.forEach(layer => {
+            if (map.hasLayer(layer)) {
+                map.removeLayer(layer);
+            }
+        });
+        routeLayers = []; // Reset the array
     }
 
     function setRegionName(name) {
@@ -181,7 +191,40 @@
             let data = await resp.json();
             if (data && data.features && data.features[0]) {
                 let coords = data.features[0].geometry.coordinates.map(c => [c[1], c[0]]);
-                routeLayer = L.polyline(coords, {color: 'blue', weight: 5}).addTo(map);
+                
+                // Create green arrow polyline (thicker)
+                routeLayer = L.polyline(coords, {
+                    color: '#ff0000', 
+                    weight: 10,
+                    opacity: 0.9,
+                    dashArray: '15, 8',
+                    lineCap: 'round',
+                    lineJoin: 'round'
+                }).addTo(map);
+                
+                // Add arrow markers along the route
+                const arrowSpacing = Math.max(1, Math.floor(coords.length / 5)); // Show ~5 arrows
+                for (let i = arrowSpacing; i < coords.length; i += arrowSpacing) {
+                    const prevCoord = coords[i - 1];
+                    const currCoord = coords[i];
+                    
+                    // Calculate correct bearing angle (from previous point to current point)
+                    const lat1 = prevCoord[0] * Math.PI / 180;
+                    const lat2 = currCoord[0] * Math.PI / 180;
+                    const deltaLng = (currCoord[1] - prevCoord[1]) * Math.PI / 180;
+                    
+                    const x = Math.sin(deltaLng) * Math.cos(lat2);
+                    const y = Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(deltaLng);
+                    
+                    let bearing = Math.atan2(x, y) * 180 / Math.PI;
+                    bearing = (bearing + 360) % 360; // Normalize to 0-360
+                    
+                    
+                }
+                
+                // Track this route layer
+                routeLayers.push(routeLayer);
+                
                 map.fitBounds(routeLayer.getBounds(), {padding: [50, 50]});
             }
         } catch (e) {
@@ -190,6 +233,9 @@
     }
 
     map.on('click', function(e) {
+        // Clear any existing routes first
+        clearRoute();
+        
         if (marker) map.removeLayer(marker);
         marker = L.marker(e.latlng).addTo(map);
         setRegionName('Loading...');
