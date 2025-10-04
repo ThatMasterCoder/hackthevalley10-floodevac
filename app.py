@@ -16,9 +16,13 @@ app = Flask(__name__)
 # Initialize the Gemini model
 model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
+@app.route('/flood-height-calculator')
+def flood_height_calculator():
+    return render_template('index.html')
+
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('home.html')
 
 @app.route('/generate', methods=['POST'])
 def generate_response():
@@ -61,4 +65,4 @@ def generate_response():
         }), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='127.0.0.1', port=5000)
