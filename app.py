@@ -81,13 +81,33 @@ def location_disasters():
             'status': 'error'
         }), 500
 
-@app.route('/suggested-questions', methods=['GET'])
+@app.route('/suggested-questions', methods=['GET', 'POST'])
 def suggested_questions():
-    print("suggested quetsions called")
+    print("suggested questions called")
     try:
+        # Get conversation history if provided
+        conversation_history = []
+        if request.method == 'POST':
+            data = request.get_json()
+            conversation_history = data.get('conversation_history', [])
+        
+        # Build context from conversation history
+        context = ""
+        if conversation_history:
+            # Get last few messages for context
+            recent_messages = conversation_history[-6:]  # Last 3 exchanges
+            context = "\n\nPrevious conversation:\n"
+            for msg in recent_messages:
+                role = "User" if msg['role'] == 'user' else "Assistant"
+                context += f"{role}: {msg['content']}\n"
+            context += "\nBased on this conversation, generate 3 relevant follow-up questions that would help the user continue the discussion about flood safety and evacuation."
+        else:
+            context = ""
+        
         # Generate suggested questions using Gemini
-        suggestion_prompt = """Generate exactly 3 short, specific questions that someone might ask about flood evacuation and safety. 
+        suggestion_prompt = f"""Generate exactly 3 short, specific questions that someone might ask about flood evacuation and safety. 
         Each question should be practical and actionable (e.g., "What should I pack in an emergency kit?", "How do I know when to evacuate?").
+        {context}
         Format: Return ONLY the 3 questions, one per line, with NO numbering, NO bullet points, NO extra text."""
         
         response = model.generate_content(suggestion_prompt)
@@ -117,13 +137,13 @@ def suggested_questions():
             'error': str(e),
             'status': 'error'
         }), 500
-
 @app.route('/generate', methods=['POST'])
 def generate_response():
     try:
         # Get the prompt from the request
         data = request.get_json()
         prompt = data.get('prompt', '')
+        conversation_history = data.get('conversation_history', [])
         
         # Add context for flood evacuation
         flood_context = """You are a helpful AI assistant specializing in flood evacuation and emergency preparedness. 
@@ -131,9 +151,17 @@ def generate_response():
 
         if not prompt:
             return jsonify({'error': 'No prompt provided'}), 400
-            
         
-        full_prompt = f"{flood_context}\n\nUser question: {prompt}"
+        # Build conversation context
+        conversation_text = ""
+        if conversation_history:
+            # Get recent history (last 10 messages to keep context manageable)
+            recent_history = conversation_history[-10:]
+            for msg in recent_history[:-1]:  # Exclude the current message which is already in prompt
+                role = "User" if msg['role'] == 'user' else "Assistant"
+                conversation_text += f"\n{role}: {msg['content']}"
+        
+        full_prompt = f"{flood_context}\n\nConversation history:{conversation_text}\n\nUser question: {prompt}"
         
         # Generate response using Gemini
         response = model.generate_content(full_prompt)
