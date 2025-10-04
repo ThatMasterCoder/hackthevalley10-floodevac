@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>World Map Selector</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; }
+        #container { display: flex; height: 100vh; background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%); }
+        #map { flex: 3; height: 100vh; border-radius: 18px 0 0 18px; box-shadow: 0 4px 24px rgba(44,62,80,0.10); }
+        #sidebar {
+            flex: 1;
+            background: rgba(255,255,255,0.95);
+            padding: 28px 24px;
+            box-shadow: 0 0 18px #b0c4de;
+            border-radius: 0 18px 18px 0;
+            display: flex;
+            flex-direction: column;
+            min-width: 340px;
+        }
+        #region { font-size: 1.2em; margin-top: 20px; color: #2a4d69; }
+        #elevation { font-size: 1.1em; margin-top: 20px; color: #41729f; }
+        #flood-directions h3 { color: #2a4d69; margin-bottom: 8px; }
+        #flood-directions div {
+            font-size: 1em;
+            margin-bottom: 6px;
+        }
+        #legend {
+            margin-top: auto;
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px #e0eafc;
+            width: 100%;
+            max-width: 100%;
+            margin-left: 0;
+            margin-right: 0;
+        }
+        #legend svg {
+            width: 100% !important;
+            min-width: 180px;
+            max-width: 100%;
+            display: block;
+            margin: 8px 0;
+        }
+        #legend img { width: 100%; max-width: 180px; display: block; margin: 8px 0; }
+    </style>
+</head>
+<body>
+<div id="container">
+    <div id="map"></div>
+    <div id="sidebar">
+        <h2>Selected Region</h2>
+        <div id="region">Click on the map to select a location.</div>
+        <div id="elevation">Elevation: <span id="elev-value">-</span> m</div>
+        <div id="flood-directions" style="margin-top:20px;">
+            <h3>Flood Evacuation Directions</h3>
+            <div id="flood-1m">1m flood: <span>-</span></div>
+            <div id="flood-2_5m">2.5m flood: <span>-</span></div>
+            <div id="flood-5m">5m flood: <span>-</span></div>
+        </div>
+
+        <div id="legend">
+            <strong>Elevation Legend</strong><br>
+            <svg width="100%" height="20" style="display:block;margin:8px 0;">
+                <defs>
+                    <linearGradient id="elev-gradient" x1="0" x2="1" y1="0" y2="0">
+                        <stop offset="0%" stop-color="#0077ff" /> <!-- Blue -->
+                        <stop offset="25%" stop-color="#22bb33" /> <!-- Green -->
+                        <stop offset="50%" stop-color="#ffff00" /> <!-- Yellow -->
+                        <stop offset="75%" stop-color="#ff2222" /> <!-- Red -->
+                        <stop offset="100%" stop-color="#8B4513" /> <!-- Brown -->
+                    </linearGradient>
+                </defs>
+                <rect x="0" y="0" width="100%" height="20" fill="url(#elev-gradient)" />
+            </svg>
+            <div style="display: flex; justify-content: space-between; font-size:0.9em;">
+                <span>Low</span>
+                <span>High</span>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    var map = L.map('map').setView([20, 0], 2);
+    L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+        maxZoom: 17,
+        attribution: 'Map data: © OpenStreetMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)' 
+    }).addTo(map);
+    var marker;
+    var routeLayer = null;
+    function clearRoute() {
+        if (routeLayer) {
+            map.removeLayer(routeLayer);
+            routeLayer = null;
+        }
+    }
+
+    function setRegionName(name) {
+        document.getElementById('region').textContent = name;
+    }
+    function setElevation(value, lat, lng, prevElevation) {
+        let elevation = value;
+        if (elevation === null || elevation === undefined || isNaN(elevation)) {
+            // If elevation is not a number, use previous elevation if valid, else 0
+            if (prevElevation !== undefined && prevElevation !== null && !isNaN(prevElevation)) {
+                elevation = prevElevation;
+            } else {
+                elevation = 0;
+            }
+        }
+        document.getElementById('elev-value').textContent = elevation;
+        setFloodDirections(elevation, lat, lng);
+    }
+    function setFloodDirections(elevation, lat, lng) {
+        const floodLevels = [1, 2.5, 5];
+        clearRoute && clearRoute();
+        floodLevels.forEach(async level => {
+            let dir = '-';
+            if (elevation !== null && elevation !== 'N/A' && !isNaN(elevation)) {
+                if (elevation < level) {
+                    dir = 'Move to higher ground!';
+                } else if (elevation < level + 10) {
+                    dir = 'Caution: Seek higher elevation nearby.';
+                    // Find nearest higher ground and draw route
+                    let target = await getNearestHigherGround(lat, lng, level + 2, elevation);
+                    if (target) {
+                        drawRouteToSafety(lat, lng, target[0], target[1]);
+                    }
+                } else {
+                    dir = 'You are likely safe from a ' + level + 'm flood.';
+                }
+            }
+            document.querySelector(`#flood-${level.toString().replace('.', '_')}m span`).textContent = dir;
+        });
+    }
+    async function getNearestHigherGround(lat, lng, minElevation, currentElevation) {
+        // Search in a spiral pattern for a nearby point with higher elevation
+        // For demo, try 8 directions at 1km, 2km, 3km, 4km, 5km
+        const R = 6371; // Earth radius in km
+        for (let d = 1; d <= 5; d++) {
+            for (let angle = 0; angle < 360; angle += 45) {
+                let rad = angle * Math.PI / 180;
+                let dLat = d * Math.cos(rad) / R * (180 / Math.PI);
+                let dLng = d * Math.sin(rad) / (R * Math.cos(lat * Math.PI / 180)) * (180 / Math.PI);
+                let nLat = lat + dLat;
+                let nLng = lng + dLng;
+                try {
+                    let resp = await fetch(`/elevation?lat=${nLat}&lng=${nLng}`);
+                    let data = await resp.json();
+                    let elev = (data && data.results && data.results[0] && data.results[0].elevation !== undefined && data.results[0].elevation !== null) ? data.results[0].elevation : NaN;
+                    if (!isNaN(elev) && elev > currentElevation && elev >= minElevation) {
+                        return [nLat, nLng];
+                    }
+                } catch (e) {}
+            }
+        }
+        return null;
+    }
+
+    async function drawRouteToSafety(lat1, lng1, lat2, lng2) {
+        clearRoute();
+        const apiKey = '5b3ce3597851110001cf6248ad5dedd05080450faf88308b1776f966';
+        const url = `https://api.openrouteservice.org/v2/directions/driving-car/geojson`;
+        const body = {
+            coordinates: [ [lng1, lat1], [lng2, lat2] ]
+        };
+        try {
+            let resp = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': apiKey
+                },
+                body: JSON.stringify(body)
+            });
+            let data = await resp.json();
+            if (data && data.features && data.features[0]) {
+                let coords = data.features[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                routeLayer = L.polyline(coords, {color: 'blue', weight: 5}).addTo(map);
+                map.fitBounds(routeLayer.getBounds(), {padding: [50, 50]});
+            }
+        } catch (e) {
+            // Optionally show error
+        }
+    }
+
+    map.on('click', function(e) {
+        if (marker) map.removeLayer(marker);
+        marker = L.marker(e.latlng).addTo(map);
+        setRegionName('Loading...');
+        // Defensive: check for valid lat/lng
+        const lat = Number(e.latlng.lat);
+        const lng = Number(e.latlng.lng);
+        if (isNaN(lat) || isNaN(lng)) {
+            setElevation('N/A', lat, lng, 0);
+            setRegionName('Invalid location');
+            return;
+        }
+        // Only call setElevation after fetching elevation
+        fetch(`/elevation?lat=${lat}&lng=${lng}`)
+            .then(res => res.json())
+            .then(data => {
+                let elev = (data && data.results && data.results[0] && data.results[0].elevation !== undefined && data.results[0].elevation !== null) ? data.results[0].elevation : NaN;
+                setElevation(elev, lat, lng, 0);
+            })
+            .catch(() => setElevation('N/A', lat, lng, 0));
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.address) {
+                    let region = data.address.state || data.address.county || data.address.country || 'Unknown region';
+                    setRegionName(region);
+                } else {
+                    setRegionName('Choose valid region');
+                }
+            })
+            .catch(() => setRegionName('Error fetching region'));
+    });
+
+
+</script>
+</body>
+</html>

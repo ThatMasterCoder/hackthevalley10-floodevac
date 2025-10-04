@@ -1,8 +1,9 @@
 from flask import Flask, jsonify, request, render_template
-import time, requests
 import google.generativeai as genai
 import os
+import re
 from dotenv import load_dotenv
+from methods import get_elevation, convert_markdown_to_html
 
 # Load environment variables from .env file
 load_dotenv()
@@ -16,9 +17,21 @@ app = Flask(__name__, static_url_path='/static', static_folder='static')
 # Initialize the Gemini model
 model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
+@app.route('/flood-height-calculator')
+def flood_height_calculator():
+    return render_template('flood-calculator.html')
+
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('home.html')
+
+@app.route('/map')
+def map_view():
+    return render_template('map.html')
+
+@app.route('/elevation', methods=['GET'])
+def elevation():
+    return get_elevation()
 
 @app.route('/generate', methods=['POST'])
 def generate_response():
@@ -41,8 +54,11 @@ def generate_response():
         
         # Check if response has text
         if hasattr(response, 'text') and response.text:
+            # Convert markdown formatting to HTML
+            formatted_response = convert_markdown_to_html(response.text)
+            
             return jsonify({
-                'response': response.text,
+                'response': formatted_response,
                 'status': 'success'
             })
         else:
@@ -64,4 +80,4 @@ def generate_response():
         }), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5002)
+    app.run(debug=True, host='127.0.0.1', port=5000)
