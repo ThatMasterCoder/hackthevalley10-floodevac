@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flood Height Calculator - FloodEvac</title>
     <link rel="stylesheet" href="/static/css/modern.css">
+    <link rel="stylesheet" href="/static/css/suggestions.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -484,6 +485,25 @@
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        
+        /* Suggested questions styling for chat widget */
+        #chatWidget .suggested-questions {
+            margin: 1rem 0;
+            padding: 0.75rem;
+            background: white;
+            border-radius: 8px;
+            border: 2px dashed rgba(0, 48, 73, 0.2);
+        }
+        
+        #chatWidget .suggestion-btn {
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            padding: 0.75rem;
+        }
+        
+        #chatWidget .suggestion-btn:last-child {
+            margin-bottom: 0;
+        }
     </style>
 </head>
 <body>
@@ -566,6 +586,11 @@
             <div class="message ai-message">
                 <strong>FloodEvac Assistant:</strong> Hello! I can help you understand flood risks and evacuation planning. Ask me anything!
             </div>
+            
+            <!-- Suggested Questions Container -->
+            <div id="suggestedQuestions" class="suggested-questions">
+                <div class="loading-suggestions">Loading suggestions...</div>
+            </div>
         </div>
         <div class="chat-input-container">
             <input type="text" id="promptInput" placeholder="Ask about flood safety..." />
@@ -580,7 +605,43 @@
         const chatWidget = document.getElementById('chatWidget');
         const toggleChatBtn = document.getElementById('toggleChatBtn');
         const chatMinimizeBtn = document.getElementById('chatMinimizeBtn');
+        const suggestedQuestionsContainer = document.getElementById('suggestedQuestions');
         let isChatMinimized = true;
+
+        // Fetch suggested questions on page load
+        async function loadSuggestedQuestions() {
+            try {
+                const response = await fetch('/suggested-questions');
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.questions) {
+                    displaySuggestedQuestions(data.questions);
+                } else {
+                    suggestedQuestionsContainer.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading suggestions:', error);
+                suggestedQuestionsContainer.style.display = 'none';
+            }
+        }
+
+        function displaySuggestedQuestions(questions) {
+            suggestedQuestionsContainer.innerHTML = '';
+            
+            questions.forEach(question => {
+                const btn = document.createElement('button');
+                btn.className = 'suggestion-btn';
+                btn.textContent = question;
+                btn.onclick = () => {
+                    promptInput.value = question;
+                    // Hide suggestions after clicking
+                    suggestedQuestionsContainer.style.display = 'none';
+                    // Optionally auto-send
+                    sendMessage();
+                };
+                suggestedQuestionsContainer.appendChild(btn);
+            });
+        }
 
         function toggleChat() {
             if (isChatMinimized) {
@@ -669,6 +730,9 @@
         });
 
         sendBtn.addEventListener('click', sendMessage);
+        
+        // Load suggestions when page loads
+        loadSuggestedQuestions();
     </script>
 </body>
     <script>

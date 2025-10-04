@@ -1,0 +1,73 @@
+/* Suggested Questions Styling */
+.suggested-questions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: linear-gradient(135deg, rgba(102, 155, 188, 0.05), rgba(0, 48, 73, 0.05));
+    border-radius: 12px;
+    border: 2px dashed rgba(102, 155, 188, 0.3);
+}
+
+.loading-suggestions {
+    text-align: center;
+    color: var(--light-blue);
+    font-style: italic;
+    padding: 0.5rem;
+}
+
+.suggestion-btn {
+    background: white;
+    border: 2px solid var(--light-blue);
+    border-radius: 10px;
+    padding: 0.875rem 1.25rem;
+    font-size: 0.95rem;
+    color: var(--dark-blue);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+}
+
+.suggestion-btn::before {
+    content: '💡';
+    position: absolute;
+    left: 1rem;
+    opacity: 0;
+    transition: all 0.3s ease;
+    transform: translateX(-10px);
+}
+
+.suggestion-btn:hover::before {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.suggestion-btn:hover {
+    background: linear-gradient(135deg, var(--light-blue), var(--dark-blue));
+    color: white;
+    border-color: var(--dark-blue);
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(102, 155, 188, 0.3);
+    padding-left: 2.5rem;
+}
+
+.suggestion-btn:active {
+    transform: translateX(3px) scale(0.98);
+    box-shadow: 0 2px 6px rgba(102, 155, 188, 0.2);
+}
+
+@media (max-width: 640px) {
+    .suggested-questions {
+        margin: 1rem 0;
+        padding: 0.75rem;
+    }
+    
+    .suggestion-btn {
+        font-size: 0.9rem;
+        padding: 0.75rem 1rem;
+    }
+}

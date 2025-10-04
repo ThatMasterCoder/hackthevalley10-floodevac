@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FloodEvac - Emergency Evacuation Assistant</title>
     <link rel="stylesheet" href="/static/css/modern.css">
+    <link rel="stylesheet" href="/static/css/suggestions.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -26,6 +27,11 @@
                 <div class="message ai-message">
                     <strong>FloodEvac Assistant:</strong> Hello! I'm here to help you with flood evacuation planning and emergency information. How can I assist you today?
                 </div>
+                
+                <!-- Suggested Questions Container -->
+                <div id="suggestedQuestions" class="suggested-questions">
+                    <div class="loading-suggestions">Loading suggestions...</div>
+                </div>
             </div>
             
             <div class="input-container">
@@ -39,6 +45,42 @@
         const chatBox = document.getElementById('chatBox');
         const promptInput = document.getElementById('promptInput');
         const sendBtn = document.getElementById('sendBtn');
+        const suggestedQuestionsContainer = document.getElementById('suggestedQuestions');
+
+        // Fetch suggested questions on page load
+        async function loadSuggestedQuestions() {
+            try {
+                const response = await fetch('/suggested-questions');
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.questions) {
+                    displaySuggestedQuestions(data.questions);
+                } else {
+                    suggestedQuestionsContainer.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading suggestions:', error);
+                suggestedQuestionsContainer.style.display = 'none';
+            }
+        }
+
+        function displaySuggestedQuestions(questions) {
+            suggestedQuestionsContainer.innerHTML = '';
+            
+            questions.forEach(question => {
+                const btn = document.createElement('button');
+                btn.className = 'suggestion-btn';
+                btn.textContent = question;
+                btn.onclick = () => {
+                    promptInput.value = question;
+                    // Hide suggestions after clicking
+                    suggestedQuestionsContainer.style.display = 'none';
+                    // Optionally auto-send
+                    sendMessage();
+                };
+                suggestedQuestionsContainer.appendChild(btn);
+            });
+        }
 
         function addMessage(message, isUser = false) {
             const messageDiv = document.createElement('div');
@@ -105,6 +147,9 @@
                 sendMessage();
             }
         });
+
+        // Load suggestions when page loads
+        loadSuggestedQuestions();
     </script>
 </body>
 </html>

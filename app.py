@@ -61,7 +61,7 @@ def location_disasters():
         if hasattr(response, 'text') and response.text:
             # Convert markdown formatting to HTML
             formatted_response = convert_markdown_to_html(response.text)
-            
+            print (response.text) # debugging
             return jsonify({
                 'response': formatted_response,
                 'status': 'success'
@@ -81,6 +81,43 @@ def location_disasters():
             'status': 'error'
         }), 500
 
+@app.route('/suggested-questions', methods=['GET'])
+def suggested_questions():
+    print("suggested quetsions called")
+    try:
+        # Generate suggested questions using Gemini
+        suggestion_prompt = """Generate exactly 3 short, specific questions that someone might ask about flood evacuation and safety. 
+        Each question should be practical and actionable (e.g., "What should I pack in an emergency kit?", "How do I know when to evacuate?").
+        Format: Return ONLY the 3 questions, one per line, with NO numbering, NO bullet points, NO extra text."""
+        
+        response = model.generate_content(suggestion_prompt)
+        
+        print(response)
+        if hasattr(response, 'text') and response.text:
+            # Split by newlines and clean up
+            questions = [q.strip() for q in response.text.split('\n') if q.strip()]
+            # Remove any numbering or bullet points that might have snuck in
+            questions = [re.sub(r'^[\d\.\-\*\)]+\s*', '', q) for q in questions]
+            # Take only first 3 questions
+            questions = questions[:3]
+            
+            return jsonify({
+                'questions': questions,
+                'status': 'success'
+            })
+        else:
+            return jsonify({
+                'error': 'Could not generate questions',
+                'status': 'error'
+            }), 500
+            
+    except Exception as e:
+        print(f"Error generating suggestions: {str(e)}")
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
 @app.route('/generate', methods=['POST'])
 def generate_response():
     try:
@@ -88,12 +125,13 @@ def generate_response():
         data = request.get_json()
         prompt = data.get('prompt', '')
         
-        if not prompt:
-            return jsonify({'error': 'No prompt provided'}), 400
-        
         # Add context for flood evacuation
         flood_context = """You are a helpful AI assistant specializing in flood evacuation and emergency preparedness. 
         Provide clear, actionable advice for flood emergencies. Always prioritize safety first."""
+
+        if not prompt:
+            return jsonify({'error': 'No prompt provided'}), 400
+            
         
         full_prompt = f"{flood_context}\n\nUser question: {prompt}"
         
