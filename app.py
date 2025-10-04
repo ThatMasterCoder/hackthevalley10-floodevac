@@ -1,8 +1,8 @@
 from flask import Flask, jsonify, request, render_template
-import time, requests
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
+from elevation import get_elevation  # Ensure this import is correct based on your project structure
 
 # Load environment variables from .env file
 load_dotenv()
@@ -23,6 +23,14 @@ def flood_height_calculator():
 @app.route('/')
 def home():
     return render_template('home.html')
+
+@app.route('/map')
+def map_view():
+    return render_template('map.html')
+
+@app.route('/elevation', methods=['GET'])
+def elevation():
+    return get_elevation()
 
 @app.route('/generate', methods=['POST'])
 def generate_response():
