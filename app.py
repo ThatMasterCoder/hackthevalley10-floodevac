@@ -33,6 +33,53 @@ def map_view():
 def elevation():
     return get_elevation()
 
+@app.route('/location-disasters', methods=['POST'])
+def location_disasters():
+    try:
+        # Get location data from the request
+        data = request.get_json()
+        lat = data.get('lat')
+        lng = data.get('lng')
+        region = data.get('region', 'this location')
+        
+        if lat is None or lng is None:
+            return jsonify({'error': 'Latitude and longitude required'}), 400
+        
+        # Create a prompt for natural disaster information
+        disaster_prompt = f"""You are a natural disaster expert. For the location at coordinates {lat}, {lng} (region: {region}), 
+        provide a brief, informative summary (3-4 sentences) about the most common natural disasters that could occur in this area.
+        
+        Consider: floods, hurricanes, earthquakes, wildfires, tornadoes, tsunamis, etc.
+        Be specific to the geographic region and climate. Focus on the top 2-3 most likely disasters.
+        Keep it concise and actionable."""
+        
+        # Generate response using Gemini
+        response = model.generate_content(disaster_prompt)
+        
+        # Check if response has text
+        if hasattr(response, 'text') and response.text:
+            # Convert markdown formatting to HTML
+            formatted_response = convert_markdown_to_html(response.text)
+            
+            return jsonify({
+                'response': formatted_response,
+                'status': 'success'
+            })
+        else:
+            return jsonify({
+                'error': 'No response generated from AI',
+                'status': 'error'
+            }), 500
+    
+    except Exception as e:
+        import traceback
+        print(f"Error in location_disasters: {str(e)}")
+        print(f"Traceback:\n{traceback.format_exc()}")
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
 @app.route('/generate', methods=['POST'])
 def generate_response():
     try:

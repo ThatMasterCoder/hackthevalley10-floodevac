@@ -73,6 +73,140 @@
             line-height: 1.5;
         }
         
+        /* Disaster Info Button */
+        #disaster-btn {
+            margin-top: 20px;
+            width: 100%;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        #disaster-btn:hover {
+            background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(243, 156, 18, 0.4);
+        }
+        
+        #disaster-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* Popup Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 8% auto;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s ease;
+            position: relative;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f39c12;
+        }
+        
+        .modal-header h2 {
+            color: #d68910;
+            font-size: 1.6em;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2em;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 0;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .close-btn:hover {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+        
+        .modal-body {
+            font-size: 1.1em;
+            line-height: 1.7;
+            color: #2c3e50;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .modal-body.loading {
+            text-align: center;
+            font-style: italic;
+            color: #7f8c8d;
+            padding: 40px 20px;
+        }
+        
+        .modal-body.error {
+            color: #c0392b;
+            text-align: center;
+            padding: 20px;
+        }
+        
         /* ========================================
            ELEVATION LEGEND STYLING 
            Adjust padding, margin-top, margin-left, 
@@ -123,6 +257,10 @@
             <div id="flood-2_5m">2.5m flood: <span>-</span></div>
             <div id="flood-5m">5m flood: <span>-</span></div>
         </div>
+        
+        <button id="disaster-btn" disabled>
+            <span>⚠️</span> View Natural Disaster Risks
+        </button>
 
         <div id="legend">
             <strong>Elevation Legend</strong><br>
@@ -145,6 +283,20 @@
         </div>
     </div>
 </div>
+
+<!-- Disaster Info Modal -->
+<div id="disaster-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><span>⚠️</span> Natural Disaster Risks</h2>
+            <button class="close-btn" onclick="closeDisasterModal()">&times;</button>
+        </div>
+        <div id="modal-body" class="modal-body">
+            Click on a location to learn about potential natural disasters in that area.
+        </div>
+    </div>
+</div>
+
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
     var map = L.map('map').setView([20, 0], 2);
@@ -155,6 +307,33 @@
     var marker;
     var routeLayer = null;
     var routeLayers = []; // Array to track multiple route layers
+    var currentDisasterInfo = null; // Store disaster info
+    
+    function openDisasterModal() {
+        document.getElementById('disaster-modal').style.display = 'block';
+    }
+    
+    function closeDisasterModal() {
+        document.getElementById('disaster-modal').style.display = 'none';
+    }
+    
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+        const modal = document.getElementById('disaster-modal');
+        if (event.target == modal) {
+            closeDisasterModal();
+        }
+    }
+    
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeDisasterModal();
+        }
+    });
+    
+    // Button click handler
+    document.getElementById('disaster-btn').addEventListener('click', openDisasterModal);
     
     function clearRoute() {
         // Clear the main route layer
@@ -174,6 +353,55 @@
     function setRegionName(name) {
         document.getElementById('region').textContent = name;
     }
+    
+    async function fetchDisasterInfo(lat, lng, regionName) {
+        const modalBody = document.getElementById('modal-body');
+        const disasterBtn = document.getElementById('disaster-btn');
+        
+        // Disable button and show loading
+        disasterBtn.disabled = true;
+        disasterBtn.innerHTML = '<span>🔄</span> Loading...';
+        modalBody.className = 'modal-body loading';
+        modalBody.innerHTML = '🔄 Loading disaster information...';
+        
+        try {
+            const response = await fetch('/location-disasters', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    lat: lat, 
+                    lng: lng, 
+                    region: regionName 
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                modalBody.className = 'modal-body';
+                modalBody.innerHTML = data.response;
+                currentDisasterInfo = data.response;
+                
+                // Enable button
+                disasterBtn.disabled = false;
+                disasterBtn.innerHTML = '<span>⚠️</span> View Natural Disaster Risks';
+            } else {
+                modalBody.className = 'modal-body error';
+                modalBody.innerHTML = '❌ Unable to load disaster information. Please try again.';
+                disasterBtn.disabled = false;
+                disasterBtn.innerHTML = '<span>⚠️</span> View Natural Disaster Risks';
+            }
+        } catch (error) {
+            console.error('Error fetching disaster info:', error);
+            modalBody.className = 'modal-body error';
+            modalBody.innerHTML = '❌ Network error. Please check your connection.';
+            disasterBtn.disabled = false;
+            disasterBtn.innerHTML = '<span>⚠️</span> View Natural Disaster Risks';
+        }
+    }
+    
     function setElevation(value, lat, lng, prevElevation) {
         let elevation = value;
         if (elevation === null || elevation === undefined || isNaN(elevation)) {
@@ -300,6 +528,7 @@
         if (marker) map.removeLayer(marker);
         marker = L.marker(e.latlng).addTo(map);
         setRegionName('Loading...');
+        
         // Defensive: check for valid lat/lng
         const lat = Number(e.latlng.lat);
         const lng = Number(e.latlng.lng);
@@ -308,6 +537,10 @@
             setRegionName('Invalid location');
             return;
         }
+        
+        // Variable to store region name for disaster info
+        let regionName = 'Unknown region';
+        
         // Only call setElevation after fetching elevation
         fetch(`/elevation?lat=${lat}&lng=${lng}`)
             .then(res => res.json())
@@ -316,17 +549,24 @@
                 setElevation(elev, lat, lng, 0);
             })
             .catch(() => setElevation('N/A', lat, lng, 0));
+            
         fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
             .then(res => res.json())
             .then(data => {
                 if (data.address) {
-                    let region = data.address.state || data.address.county || data.address.country || 'Unknown region';
-                    setRegionName(region);
+                    regionName = data.address.state || data.address.county || data.address.country || 'Unknown region';
+                    setRegionName(regionName);
+                    // Fetch disaster information after getting region name
+                    fetchDisasterInfo(lat, lng, regionName);
                 } else {
                     setRegionName('Choose valid region');
+                    fetchDisasterInfo(lat, lng, 'this location');
                 }
             })
-            .catch(() => setRegionName('Error fetching region'));
+            .catch(() => {
+                setRegionName('Error fetching region');
+                fetchDisasterInfo(lat, lng, 'this location');
+            });
     });
 
 
