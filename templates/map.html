@@ -6,7 +6,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; }
+        body { margin: 0; font-family: Arial, sans-serif; position: relative; }
+        
+        /* Back button styling */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: #2a4d69;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1em;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .back-button:hover {
+            background: #41729f;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+        }
+        
         #container { display: flex; height: 100vh; background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%); }
         #map { flex: 3; height: 100vh; border-radius: 18px 0 0 18px; box-shadow: 0 4px 24px rgba(44,62,80,0.10); }
         #sidebar {
@@ -50,6 +77,9 @@
     </style>
 </head>
 <body>
+<a href="/" class="back-button">
+    <span>←</span> Back to Home
+</a>
 <div id="container">
     <div id="map"></div>
     <div id="sidebar">
