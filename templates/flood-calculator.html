@@ -4,9 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flood Height Calculator - FloodEvac</title>
-    <link rel="stylesheet" href="/static/css/modern.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --accent1: #7c3aed;
+            --accent2: #06b6d4;
+            --accent3: #ec4899;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg: #000212;
+            --surface: rgba(255, 255, 255, 0.02);
+            --text: #fff;
+            --text-light: rgba(255, 255, 255, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --shadow: rgba(0, 0, 0, 0.2);
+            --glow1: rgba(124, 58, 237, 0.1);
+            --glow2: rgba(6, 182, 212, 0.1);
+            --glow3: rgba(236, 72, 153, 0.1);
+            --backdrop: blur(20px) saturate(180%);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --primary: #3b82f6;
+                --primary-dark: #2563eb;
+                --bg: #0f172a;
+                --text: #e2e8f0;
+                --text-light: #94a3b8;
+                --border: #1e293b;
+                --card-bg: #1e293b;
+                --shadow: rgba(0, 0, 0, 0.3);
+                --gradient: linear-gradient(135deg, #3b82f6, #2563eb);
+            }
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -27,9 +62,11 @@
         @keyframes fadeIn {
             from {
                 opacity: 0;
+                transform: translateY(-10px);
             }
             to {
                 opacity: 1;
+                transform: translateY(0);
             }
         }
 
@@ -43,13 +80,30 @@
                 opacity: 1;
             }
         }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
         
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #003049 0%, #2a4d69 100%);
+            background: var(--bg);
+            background-image: 
+                radial-gradient(circle at 15% 50%, var(--glow1), transparent 25%),
+                radial-gradient(circle at 85% 30%, var(--glow2), transparent 25%),
+                radial-gradient(circle at 50% 80%, var(--glow3), transparent 25%);
             min-height: 100vh;
             padding: 40px 20px;
-            color: #1a202c;
+            color: var(--text);
+            transition: all 0.3s ease;
         }
 
         ::selection {
@@ -231,15 +285,32 @@
         }
         
         .container {
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--surface);
             padding: 3rem;
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            border-radius: 32px;
+            border: 1px solid var(--border);
+            box-shadow: 0 0 80px var(--glow1);
             max-width: 800px;
             width: 100%;
             margin: 0 auto;
             animation: slideIn 0.6s ease-out;
-            backdrop-filter: blur(10px);
+            backdrop-filter: var(--backdrop);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, var(--accent1), var(--accent2), var(--accent3));
+            mask: linear-gradient(#000, #000) content-box,
+                 linear-gradient(#000, #000);
+            mask-composite: exclude;
+            -webkit-mask-composite: destination-out;
+            padding: 1px;
+            pointer-events: none;
         }
         
         .header {
@@ -248,26 +319,33 @@
         }
         
         .header h1 {
-            color: #003049;
             margin-bottom: 0.75rem;
-            font-size: 2.75rem;
+            font-size: 3.5rem;
             font-weight: 700;
+            color: var(--text);
+            text-shadow: 0 0 30px var(--glow1);
+            letter-spacing: -0.02em;
         }
         
         .header p {
-            color: #4a5568;
+            color: var(--text-light);
             font-size: 1.2rem;
             line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+            transition: color 0.3s ease;
         }
         
         .calculator-container {
-            background: linear-gradient(to bottom, #ffffff, #f8fafc);
+            background: var(--card-bg);
             padding: 3rem;
-            border-radius: 20px;
-            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 24px;
+            border: 1px solid var(--border);
             margin-bottom: 2.5rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
             animation: scaleIn 0.5s ease-out 0.2s both;
+            transition: all 0.3s ease;
+            backdrop-filter: var(--backdrop);
+            position: relative;
         }
         
         .calculator-container h2 {
@@ -286,28 +364,36 @@
         .form-group label {
             display: block;
             font-weight: 600;
-            color: #2d3748;
+            color: var(--text);
             margin-bottom: 0.75rem;
             font-size: 1.1rem;
+            transition: color 0.3s ease;
         }
         
         .form-group select,
         .form-group input {
             width: 100%;
             padding: 1.25rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
             font-size: 1.1rem;
             outline: none;
             transition: all 0.3s ease;
-            background: white;
-            color: #1a202c;
+            background: var(--surface);
+            color: var(--text);
             appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23003049' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.7)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 1rem center;
             background-size: 1em;
             padding-right: 3rem;
+            backdrop-filter: var(--backdrop);
+        }
+
+        .form-group select:hover,
+        .form-group input:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 20px var(--glow2);
         }
 
         .form-group input {
@@ -317,23 +403,38 @@
         
         .form-group select:focus,
         .form-group input:focus {
-            border-color: #003049;
-            box-shadow: 0 0 0 3px rgba(0, 48, 73, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--shadow);
         }
         
         .calculate-btn {
             width: 100%;
             padding: 1.5rem;
-            background: linear-gradient(135deg, #003049 0%, #00436a 100%);
+            background: var(--surface);
             color: white;
-            border: none;
-            border-radius: 14px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
             font-size: 1.2rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            transform: translateY(0);
+            backdrop-filter: var(--backdrop);
+        }
+
+        .calculate-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, var(--accent1), var(--accent2), var(--accent3));
+            mask: linear-gradient(#000, #000) content-box,
+                 linear-gradient(#000, #000);
+            mask-composite: exclude;
+            -webkit-mask-composite: destination-out;
+            padding: 1px;
+            pointer-events: none;
         }
 
         .calculate-btn::after {
@@ -353,8 +454,8 @@
         }
         
         .calculate-btn:hover {
-            background: #00436a;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px var(--glow3);
         }
         
         .calculate-btn:disabled {
@@ -366,17 +467,18 @@
         .result {
             margin-top: 2rem;
             padding: 2rem;
-            background: linear-gradient(to right, #ebf8ff, #e6fffa);
-            border: 2px solid rgba(0, 48, 73, 0.2);
+            background: var(--card-bg);
+            border: 2px solid var(--primary);
             border-radius: 16px;
             font-size: 1.3rem;
             font-weight: 600;
-            color: #003049;
+            color: var(--text);
             text-align: center;
             display: none;
             animation: fadeIn 0.3s ease;
             position: relative;
             overflow: hidden;
+            transition: all 0.3s ease;
         }
 
         .result::before {
@@ -404,15 +506,16 @@
         }
         
         .info-section {
-            background: #f8fafc;
+            background: var(--surface);
             padding: 2rem;
-            border-radius: 20px;
-            border: 1px solid rgba(226, 232, 240, 0.6);
+            border-radius: 24px;
+            border: 1px solid var(--border);
             margin-bottom: 2.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
             animation: scaleIn 0.5s ease-out both;
             position: relative;
             overflow: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: var(--backdrop);
         }
 
         .info-section::before {
@@ -422,24 +525,28 @@
             left: 0;
             width: 100%;
             height: 4px;
-            background: linear-gradient(90deg, #003049, #2a4d69);
+            background: linear-gradient(90deg, #3b82f6, #4f46e5, #7c3aed);
             opacity: 0.8;
+            background-size: 200% 200%;
+            animation: gradientShift 6s ease infinite;
         }
         
         .info-section h3 {
-            color: #003049;
+            color: var(--text);
             margin-bottom: 1.25rem;
             font-size: 1.4rem;
             font-weight: 600;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            transition: color 0.3s ease;
         }
         
         .info-section ul {
-            color: #4a5568;
+            color: var(--text-light);
             padding-left: 1.5rem;
             list-style-type: none;
+            transition: color 0.3s ease;
         }
         
         .info-section li {
@@ -465,19 +572,38 @@
         .nav-link {
             display: inline-block;
             padding: 1rem 2rem;
-            background: #003049;
+            background: var(--surface);
             color: white;
             text-decoration: none;
-            border-radius: 10px;
+            border-radius: 16px;
             margin: 0 0.5rem;
             transition: all 0.3s ease;
             font-weight: 500;
             font-size: 1.1rem;
+            transform: translateY(0);
+            border: 1px solid var(--border);
+            backdrop-filter: var(--backdrop);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, var(--accent2), var(--accent3));
+            mask: linear-gradient(#000, #000) content-box,
+                 linear-gradient(#000, #000);
+            mask-composite: exclude;
+            -webkit-mask-composite: destination-out;
+            padding: 1px;
+            pointer-events: none;
         }
         
         .nav-link:hover {
-            background: #00436a;
-            transform: translateY(-1px);
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
         }
         
         @keyframes fadeIn {
@@ -672,42 +798,107 @@
     </script>
 </body>
     <script>
-        document.getElementById('floodForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Get form values
+        function calculateFloodHeight() {
             const intensity = parseFloat(document.getElementById('intensity').value);
-            const time = parseFloat(document.getElementById('time').value);
+            const duration = parseFloat(document.getElementById('duration').value);
             const runoff = parseFloat(document.getElementById('runoff').value);
-            const resultDiv = document.getElementById('flood-result');
+            const resultDiv = document.getElementById('result');
             
-            // Validate inputs
-            if (isNaN(intensity) || isNaN(time) || isNaN(runoff) || 
-                intensity <= 0 || time <= 0 || runoff <= 0) {
-                resultDiv.textContent = 'Please enter valid values for all fields.';
-                resultDiv.className = 'result error';
-                resultDiv.style.display = 'block';
+            if (isNaN(intensity) || isNaN(duration) || isNaN(runoff) || 
+                intensity <= 0 || duration <= 0 || runoff <= 0 || runoff > 1) {
+                showError('Please enter valid values for all fields');
                 return;
             }
             
-            // Calculate flood height using the formula
-            const height = (intensity * time * runoff) / 15;
+            try {
+                // Show loading state
+                resultDiv.classList.add('visible');
+                resultDiv.innerHTML = `
+                    <div class="loading">Calculating flood height...</div>
+                `;
+                
+                // Calculate flood height
+                const height = (intensity * duration * runoff) / 15;
+                
+                // Short delay for loading state
+                setTimeout(() => {
+                    showResult(height);
+                    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 600);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showError('Error calculating flood height. Please try again.');
+            }
+        }
+
+        function showResult(height) {
+            const feet = height * 3.28084;
+            const resultDiv = document.getElementById('result');
+            const risk = getRiskLevel(height);
             
-            // Display result
             resultDiv.innerHTML = `
-                <div style="font-size: 1.4em; margin-bottom: 0.5rem;">
-                    Estimated Flood Height: <strong>${height.toFixed(2)} meters</strong>
+                <div class="result-label">Estimated Flood Height</div>
+                <div class="result-value">
+                    ${height.toFixed(2)}<span class="result-unit">m</span>
+                    <div style="font-size: 1rem; opacity: 0.7; margin-top: 0.5rem;">
+                        ${feet.toFixed(2)} ft
+                    </div>
                 </div>
-                <div style="font-size: 0.9em; color: #666;">
-                    (${(height * 3.28084).toFixed(2)} feet)
+                <div class="recommendation">
+                    <div class="risk-indicator">
+                        <div class="risk-icon">${risk.icon}</div>
+                        <div>
+                            <div class="risk-level" style="color: ${risk.color}">${risk.level}</div>
+                            <div>${risk.message}</div>
+                        </div>
+                    </div>
                 </div>
             `;
-            resultDiv.className = 'result';
-            resultDiv.style.display = 'block';
+        }
+
+        function getRiskLevel(height) {
+            if (height < 0.3) {
+                return {
+                    level: 'Low Risk',
+                    message: 'Monitor local weather updates and stay informed.',
+                    color: 'var(--success-gradient)',
+                    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="#059669" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#059669" stroke-width="2"/></svg>'
+                };
+            } else if (height < 1) {
+                return {
+                    level: 'Moderate Risk',
+                    message: 'Prepare for possible evacuation. Gather emergency supplies.',
+                    color: 'var(--warning-gradient)',
+                    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                };
+            } else if (height < 2) {
+                return {
+                    level: 'High Risk',
+                    message: 'Consider immediate evacuation. Move to higher ground.',
+                    color: 'linear-gradient(135deg, #f97316, #ea580c)',
+                    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 9v2m0 4h.01M12 3l9 15H3L12 3z" stroke="#f97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                };
+            } else {
+                return {
+                    level: 'Extreme Risk',
+                    message: 'Immediate evacuation recommended! Seek emergency assistance.',
+                    color: 'var(--danger-gradient)',
+                    icon: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 9v2m0 4h.01M3 4l18 0M4 4h16v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                };
+            }
+        }
+
+        function showError(message) {
+            const toast = document.createElement('div');
+            toast.className = 'error-toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
             
-            // Scroll to result
-            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        });
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
     </script>
 </body>
 </html>
