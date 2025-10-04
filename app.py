@@ -51,7 +51,7 @@ def location_disasters():
         
         Consider: floods, hurricanes, earthquakes, wildfires, tornadoes, tsunamis, etc.
         Be specific to the geographic region and climate. Focus on the top 2-3 most likely disasters.
-        Keep it concise and actionable."""
+        Keep it concise and actionable. YOU ARE IN A FLOOD EVACUATION APP, DO NOT THANK THE PROMPT, DO NOT SAY 'i'm sorry' or 'as a natural disaster expert', ONLY PROVIDE THE INFORMATION."""
         
         # Generate response using Gemini
         response = model.generate_content(disaster_prompt)
