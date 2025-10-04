@@ -30,58 +30,38 @@ def generate_response():
         if not prompt:
             return jsonify({'error': 'No prompt provided'}), 400
         
-        # Add context for flood evacuation with more specific role definition
-        flood_context = """You are FloodEvac Assistant, an AI specialist in flood evacuation and emergency preparedness.
-        Your role is to:
-        1. Provide clear, actionable advice for flood emergencies
-        2. Help with evacuation planning and safety measures
-        3. Respond in a calm, informative manner
-        4. Always prioritize human safety first
+        # Add context for flood evacuation
+        flood_context = """You are a helpful AI assistant specializing in flood evacuation and emergency preparedness. 
+        Provide clear, actionable advice for flood emergencies. Always prioritize safety first."""
         
-        Format your responses in a clear, easy-to-read manner.
-        If you need to list steps, number them clearly.
-        If you provide emergency advice, highlight critical information."""
+        full_prompt = f"{flood_context}\n\nUser question: {prompt}"
         
-        full_prompt = f"{flood_context}\n\nUser message: {prompt}\n\nProvide a helpful, clear response:"
+        # Generate response using Gemini
+        response = model.generate_content(full_prompt)
         
-        # Generate response using Gemini with safety configurations
-        try:
-            response = model.generate_content(
-                full_prompt,
-                generation_config={
-                    'temperature': 0.7,
-                    'top_p': 0.8,
-                    'top_k': 40,
-                }
-            )
-            
-            # Validate the response
-            if not response:
-                raise ValueError("Empty response from Gemini API")
-            
-            # Extract and validate the text
-            response_text = getattr(response, 'text', None)
-            if not response_text or not isinstance(response_text, str):
-                raise ValueError("Invalid or missing response text")
-            
+        # Check if response has text
+        if hasattr(response, 'text') and response.text:
             return jsonify({
-                'response': response_text,
+                'response': response.text,
                 'status': 'success'
             })
-            
-        except Exception as api_error:
+        else:
             return jsonify({
-                'error': f'AI Generation Error: {str(api_error)}',
-                'status': 'error'
+                'error': 'No response generated from AI',
+                'status': 'error',
+                'debug_info': str(response)
             }), 500
     
     except Exception as e:
         import traceback
+        print(f"Error: {str(e)}")
+        print(f"API Key present: {'GEMINI_API_KEY' in os.environ}")
+        print(f"Traceback:\n{traceback.format_exc()}")
         return jsonify({
-            'error': 'Server Error: ' + str(e),
+            'error': str(e),
             'status': 'error',
             'traceback': traceback.format_exc()
         }), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5002)
