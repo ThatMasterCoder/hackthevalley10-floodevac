@@ -14,7 +14,7 @@ genai.configure(api_key=os.getenv('GEMINI_API_KEY'))
 app = Flask(__name__)
 
 # Initialize the Gemini model
-model = genai.GenerativeModel('gemini-pro')
+model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
 @app.route('/')
 def home():
@@ -30,18 +30,34 @@ def generate_response():
         if not prompt:
             return jsonify({'error': 'No prompt provided'}), 400
         
-        # Generate response using Gemini
-        response = model.generate_content(prompt)
+        # Add context for flood evacuation
+        flood_context = """You are a helpful AI assistant specializing in flood evacuation and emergency preparedness. 
+        Provide clear, actionable advice for flood emergencies. Always prioritize safety first."""
         
-        return jsonify({
-            'response': response.text,
-            'status': 'success'
-        })
+        full_prompt = f"{flood_context}\n\nUser question: {prompt}"
+        
+        # Generate response using Gemini
+        response = model.generate_content(full_prompt)
+        
+        # Check if response has text
+        if hasattr(response, 'text') and response.text:
+            return jsonify({
+                'response': response.text,
+                'status': 'success'
+            })
+        else:
+            return jsonify({
+                'error': 'No response generated from AI',
+                'status': 'error',
+                'debug_info': str(response)
+            }), 500
     
     except Exception as e:
+        import traceback
         return jsonify({
             'error': str(e),
-            'status': 'error'
+            'status': 'error',
+            'traceback': traceback.format_exc()
         }), 500
 
 if __name__ == '__main__':
