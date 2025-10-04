@@ -623,9 +623,10 @@
         const modalBody = document.getElementById('modal-body');
         const disasterBtn = document.getElementById('disaster-btn');
         
-        // Disable button and show loading
-        disasterBtn.disabled = true;
-        disasterBtn.innerHTML = '<span>🔄</span> Loading...';
+        // Enable button immediately - no loading state
+        disasterBtn.disabled = false;
+        
+        // Set initial modal content to loading (but don't change button)
         modalBody.className = 'modal-body loading';
         modalBody.innerHTML = '🔄 Loading disaster information...';
         
@@ -648,22 +649,14 @@
                 modalBody.className = 'modal-body';
                 modalBody.innerHTML = data.response;
                 currentDisasterInfo = data.response;
-                
-                // Enable button
-                disasterBtn.disabled = false;
-                disasterBtn.innerHTML = '<span>⚠️</span> View Natural Disaster Risks';
             } else {
                 modalBody.className = 'modal-body error';
                 modalBody.innerHTML = '❌ Unable to load disaster information. Please try again.';
-                disasterBtn.disabled = false;
-                disasterBtn.innerHTML = '<span>⚠️</span> View Natural Disaster Risks';
             }
         } catch (error) {
             console.error('Error fetching disaster info:', error);
             modalBody.className = 'modal-body error';
             modalBody.innerHTML = '❌ Network error. Please check your connection.';
-            disasterBtn.disabled = false;
-            disasterBtn.innerHTML = '<span>⚠️</span> View Natural Disaster Risks';
         }
     }
     
