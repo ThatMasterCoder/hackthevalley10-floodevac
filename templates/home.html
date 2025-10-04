@@ -41,6 +41,11 @@
             border: none;
         }
         a.button:hover, .btn-primary:hover { background: #41729f; color: #fff; }
+        .btn-lg { 
+            width: 280px; 
+            font-size: 1.2em;
+            padding: 15px 40px;
+        }
     </style>
 </head>
 <body>
@@ -50,7 +55,10 @@
             Explore flood risk, elevation, and evacuation routes anywhere in the world.<br>
             Use our interactive map to check your region, calculate flood heights, and get safe directions.
         </p>
-        <a href="/map" class="btn btn-primary btn-lg">Enter the Map</a>
+        <div class="d-flex flex-column gap-3 align-items-center">
+            <a href="/map" class="btn btn-primary btn-lg">🗺️ Interactive Map</a>
+            <a href="/flood-height-calculator" class="btn btn-success btn-lg">🧮 Flood Calculator</a>
+        </div>
     </div>
 </body>
 </html>
