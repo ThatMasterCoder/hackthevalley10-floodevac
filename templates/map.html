@@ -7,14 +7,18 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; position: relative; font-size: 16px; }
+        body { margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 16px; }
         
-        /* Back button styling */
-        .back-button {
-            position: fixed;
-            top: 20px;
-            right: 230px;
+        /* Back button styling - responsive positioning */
+        .back-button-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 20px 0 0 20px;
             z-index: 1000;
+        }
+        
+        .back-button {
             background: #2a4d69;
             color: white;
             padding: 10px 18px;
@@ -24,7 +28,7 @@
             font-size: 1em;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             transition: all 0.3s ease;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 6px;
         }
@@ -35,7 +39,12 @@
             box-shadow: 0 6px 16px rgba(0,0,0,0.3);
         }
         
-        #container { display: flex; height: 100vh; background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%); }
+        #container { 
+            display: flex; 
+            height: 100vh; 
+            background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%); 
+            position: relative;
+        }
         #map { flex: 3; height: 100vh; border-radius: 18px 0 0 18px; box-shadow: 0 4px 24px rgba(44,62,80,0.10); }
         #sidebar {
             flex: 1;
@@ -47,6 +56,7 @@
             display: flex;
             flex-direction: column;
             min-width: 340px;
+            position: relative;
         }
         #sidebar h2 {
             font-size: 1.6em;
@@ -96,12 +106,14 @@
     </style>
 </head>
 <body>
-<a href="/" class="back-button">
-    <span>←</span> Back to Home
-</a>
 <div id="container">
     <div id="map"></div>
     <div id="sidebar">
+        <div class="back-button-container">
+            <a href="/" class="back-button">
+                <span>←</span> Back to Home
+            </a>
+        </div>
         <h2>Selected Region</h2>
         <div id="region">Click on the map to select a location.</div>
         <div id="elevation">Elevation: <span id="elev-value">-</span> m</div>
