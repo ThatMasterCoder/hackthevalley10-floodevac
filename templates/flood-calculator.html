@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flood Height Calculator - FloodEvac</title>
-    <link rel="stylesheet" href="/static/css/modern.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -13,7 +12,24 @@
             box-sizing: border-box;
         }
         
-        @keyframes slideIn {
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a2332 0%, #2c3e50 50%, #34495e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #e8eef5;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
             from {
                 opacity: 0;
                 transform: translateY(30px);
@@ -24,688 +40,376 @@
             }
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        @keyframes scaleIn {
-            from {
-                transform: scale(0.95);
-                opacity: 0;
-            }
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #003049 0%, #2a4d69 100%);
-            min-height: 100vh;
-            padding: 40px 20px;
-            color: #1a202c;
-        }
-
-        ::selection {
-            background: rgba(0, 48, 73, 0.1);
-        }
-        
-        @keyframes slideUp {
-            from { transform: translateY(0); }
-            to { transform: translateY(calc(100% + 20px)); }
-        }
-
-        @keyframes slideDown {
-            from { transform: translateY(calc(100% + 20px)); }
-            to { transform: translateY(0); }
-        }
-
-        #chatWidget {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 450px;
-            height: 600px;
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            z-index: 1000;
-            animation: slideIn 0.6s ease-out 0.3s both;
-            transform-origin: bottom right;
-            transition: transform 0.3s ease-in-out;
-        }
-
-        #chatWidget.minimized {
-            animation: slideUp 0.3s ease-in-out forwards;
-        }
-
-        #chatWidget.maximized {
-            animation: slideDown 0.3s ease-in-out forwards;
-        }
-
-        #toggleChatBtn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 30px;
-            background: linear-gradient(135deg, #003049 0%, #00436a 100%);
-            color: white;
-            border: none;
-            cursor: pointer;
-            z-index: 999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-        }
-
-        #toggleChatBtn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-        }
-
-        #toggleChatBtn::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent);
-            border-radius: 30px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        #toggleChatBtn:hover::after {
-            opacity: 1;
-        }
-
-        #chatHeader {
-            background: #003049;
-            color: white;
-            padding: 16px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: move;
-        }
-
-        #chatMinimizeBtn {
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            padding: 4px 8px;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 4px;
-            transition: background-color 0.2s ease;
-        }
-
-        #chatMinimizeBtn:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        #chatBox {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 20px;
-            background: #f8f9fa;
-        }
-
-        .chat-input-container {
-            padding: 16px;
-            border-top: 1px solid #e0e0e0;
-            display: flex;
-            background: white;
-        }
-
-        .chat-input-container input {
-            flex-grow: 1;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            margin-right: 12px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .chat-input-container input:focus {
-            border-color: #003049;
-            outline: none;
-        }
-
-        .chat-input-container button {
-            padding: 12px 24px;
-            background: #003049;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            transition: background 0.3s ease;
-        }
-
-        .chat-input-container button:hover {
-            background: #00436a;
-        }
-
-        .message {
-            margin-bottom: 16px;
-            padding: 12px 16px;
-            border-radius: 12px;
-            font-size: 1rem;
-            line-height: 1.5;
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        .ai-message {
-            background: #e3f2fd;
-            margin-right: 24px;
-            border-bottom-left-radius: 4px;
-        }
-
-        .user-message {
-            background: #003049;
-            color: white;
-            margin-left: 24px;
-            border-bottom-right-radius: 4px;
-        }
-        
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 3rem;
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-            max-width: 800px;
-            width: 100%;
-            margin: 0 auto;
-            animation: slideIn 0.6s ease-out;
-            backdrop-filter: blur(10px);
-        }
-        
         .header {
             text-align: center;
-            margin-bottom: 2.5rem;
+            margin-bottom: 3rem;
         }
-        
+
         .header h1 {
-            color: #003049;
-            margin-bottom: 0.75rem;
-            font-size: 2.75rem;
+            font-size: 2.8em;
             font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
         }
-        
+
+        .header .emoji {
+            font-size: 1.2em;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
         .header p {
-            color: #4a5568;
-            font-size: 1.2rem;
-            line-height: 1.6;
+            font-size: 1.2em;
+            color: #a0b4c8;
+            font-weight: 400;
         }
-        
-        .calculator-container {
-            background: linear-gradient(to bottom, #ffffff, #f8fafc);
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
             padding: 3rem;
-            border-radius: 20px;
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            margin-bottom: 2.5rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-            animation: scaleIn 0.5s ease-out 0.2s both;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4),
+                        0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
-        .calculator-container h2 {
-            color: #003049;
+
+        .info-banner {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            padding: 1.5rem;
+            border-radius: 16px;
             margin-bottom: 2rem;
-            text-align: center;
-            font-size: 1.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .info-banner h3 {
+            font-size: 1.3em;
+            margin-bottom: 1rem;
+            color: #ffffff;
             font-weight: 600;
         }
-        
+
+        .info-banner ul {
+            list-style: none;
+            color: #e8f4f8;
+        }
+
+        .info-banner li {
+            margin-bottom: 0.7rem;
+            padding-left: 1.5rem;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        .info-banner li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #ffffff;
+            font-weight: bold;
+        }
+
+        .calculator-section h2 {
+            font-size: 1.8em;
+            color: #ffffff;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
         .form-group {
             margin-bottom: 2rem;
-            animation: fadeIn 0.5s ease-out both;
         }
-        
+
         .form-group label {
             display: block;
             font-weight: 600;
-            color: #2d3748;
+            color: #ffffff;
             margin-bottom: 0.75rem;
-            font-size: 1.1rem;
+            font-size: 1.1em;
         }
-        
+
         .form-group select,
         .form-group input {
             width: 100%;
-            padding: 1.25rem;
-            border: 2px solid #e2e8f0;
+            padding: 1rem 1.25rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
-            font-size: 1.1rem;
+            font-size: 1em;
             outline: none;
             transition: all 0.3s ease;
-            background: white;
-            color: #1a202c;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23003049' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 1em;
-            padding-right: 3rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
         }
 
-        .form-group input {
-            background-image: none;
-            padding-right: 1.25rem;
+        .form-group select option {
+            background: #2c3e50;
+            color: #ffffff;
         }
-        
+
         .form-group select:focus,
         .form-group input:focus {
-            border-color: #003049;
-            box-shadow: 0 0 0 3px rgba(0, 48, 73, 0.1);
+            border-color: #4a90e2;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
         }
-        
+
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
         .calculate-btn {
             width: 100%;
-            padding: 1.5rem;
-            background: linear-gradient(135deg, #003049 0%, #00436a 100%);
+            padding: 1.25rem;
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
             color: white;
             border: none;
-            border-radius: 14px;
-            font-size: 1.2rem;
+            border-radius: 12px;
+            font-size: 1.2em;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+            font-family: 'Inter', sans-serif;
         }
 
-        .calculate-btn::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .calculate-btn:hover::after {
-            opacity: 1;
-        }
-        
         .calculate-btn:hover {
-            background: #00436a;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
         }
-        
-        .calculate-btn:disabled {
-            background: #cbd5e0;
-            cursor: not-allowed;
-            transform: none;
+
+        .calculate-btn:active {
+            transform: translateY(0);
         }
-        
+
         .result {
             margin-top: 2rem;
             padding: 2rem;
-            background: linear-gradient(to right, #ebf8ff, #e6fffa);
-            border: 2px solid rgba(0, 48, 73, 0.2);
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
             border-radius: 16px;
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #003049;
             text-align: center;
             display: none;
-            animation: fadeIn 0.3s ease;
-            position: relative;
-            overflow: hidden;
+            animation: slideDown 0.4s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .result::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.5), transparent);
-            transform: translateX(-100%);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            100% {
-                transform: translateX(100%);
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
         }
-        
+
         .result.error {
-            background: #fff5f5;
-            border-color: #c53030;
-            color: #c53030;
-        }
-        
-        .info-section {
-            background: #f8fafc;
-            padding: 2rem;
-            border-radius: 20px;
-            border: 1px solid rgba(226, 232, 240, 0.6);
-            margin-bottom: 2.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
-            animation: scaleIn 0.5s ease-out both;
-            position: relative;
-            overflow: hidden;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
         }
 
-        .info-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #003049, #2a4d69);
-            opacity: 0.8;
+        .result .result-value {
+            font-size: 2.2em;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
         }
-        
-        .info-section h3 {
-            color: #003049;
-            margin-bottom: 1.25rem;
-            font-size: 1.4rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+
+        .result .result-subtitle {
+            font-size: 1.1em;
+            color: rgba(255, 255, 255, 0.9);
         }
-        
-        .info-section ul {
-            color: #4a5568;
-            padding-left: 1.5rem;
-            list-style-type: none;
+
+        .warning-section {
+            background: rgba(231, 76, 60, 0.15);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-top: 2rem;
+            border: 1px solid rgba(231, 76, 60, 0.3);
         }
-        
-        .info-section li {
+
+        .warning-section h3 {
+            font-size: 1.3em;
             margin-bottom: 1rem;
-            position: relative;
+            color: #ff6b6b;
+            font-weight: 600;
+        }
+
+        .warning-section ul {
+            list-style: none;
+            color: #e8eef5;
+        }
+
+        .warning-section li {
+            margin-bottom: 0.7rem;
             padding-left: 1.5rem;
+            position: relative;
             line-height: 1.6;
         }
-        
-        .info-section li:before {
-            content: "•";
-            color: #003049;
-            font-weight: bold;
+
+        .warning-section li:before {
+            content: "⚠️";
             position: absolute;
             left: 0;
         }
-        
+
         .navigation {
             text-align: center;
-            margin-top: 2.5rem;
+            margin-top: 3rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
         }
-        
+
         .nav-link {
-            display: inline-block;
-            padding: 1rem 2rem;
-            background: #003049;
-            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.75rem;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
             text-decoration: none;
-            border-radius: 10px;
-            margin: 0 0.5rem;
+            border-radius: 12px;
             transition: all 0.3s ease;
             font-weight: 500;
-            font-size: 1.1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
+
         .nav-link:hover {
-            background: #00436a;
-            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .main-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .calculator-section h2 {
+                font-size: 1.5em;
+            }
         }
     </style>
 </head>
 <body>
-    <main class="container">
+    <div class="container">
         <div class="header">
-            <h1>🌊 Flood Height Calculator</h1>
+            <h1><span class="emoji">🌊</span> Flood Height Calculator</h1>
             <p>Estimate potential flood heights based on rainfall conditions</p>
         </div>
         
-        <div class="info-section" style="animation-delay: 0.1s;">
-            <h3>ℹ️ How This Calculator Works</h3>
-            <ul>
-                <li><strong>Rainfall Intensity:</strong> How much rain falls per hour</li>
-                <li><strong>Rain Duration:</strong> How long the rain continues</li>
-                <li><strong>Runoff Coefficient:</strong> How much water flows off surfaces (vs. being absorbed)</li>
-                <li><strong>Formula:</strong> Flood Height = (Intensity × Duration × Runoff) ÷ 15</li>
-            </ul>
-        </div>
-        
-        <div class="calculator-container">
-            <h2>Calculate Flood Height</h2>
+        <div class="main-card">
+            <div class="info-banner">
+                <h3>ℹ️ How This Calculator Works</h3>
+                <ul>
+                    <li><strong>Rainfall Intensity:</strong> How much rain falls per hour</li>
+                    <li><strong>Rain Duration:</strong> How long the rain continues</li>
+                    <li><strong>Runoff Coefficient:</strong> How much water flows off surfaces (vs. being absorbed)</li>
+                    <li><strong>Formula:</strong> Flood Height = (Intensity × Duration × Runoff) ÷ 15</li>
+                </ul>
+            </div>
             
-            <form id="floodForm">
-                <div class="form-group" style="animation-delay: 0.2s;">
-                    <label for="intensity">Rainfall Intensity (cm/hr):</label>
-                    <select id="intensity" required>
-                        <option value="">Select intensity...</option>
-                        <option value="0.25">Light Rain (0.25–0.50 cm/hr)</option>
-                        <option value="0.51">Moderate Rain (0.51–0.75 cm/hr)</option>
-                        <option value="0.76">Heavy Rain (0.76–1.5 cm/hr)</option>
-                        <option value="2.0">Very Heavy Rain (2.0+ cm/hr)</option>
-                    </select>
-                </div>
+            <div class="calculator-section">
+                <h2>Calculate Flood Height</h2>
                 
-                <div class="form-group" style="animation-delay: 0.3s;">
-                    <label for="time">Rain Duration (hours):</label>
-                    <input type="number" id="time" min="0.1" step="0.1" placeholder="e.g., 2.5" required>
-                </div>
+                <form id="floodForm">
+                    <div class="form-group">
+                        <label for="intensity">Rainfall Intensity (cm/hr)</label>
+                        <select id="intensity" required>
+                            <option value="">Select intensity...</option>
+                            <option value="0.25">Light Rain (0.25–0.50 cm/hr)</option>
+                            <option value="0.51">Moderate Rain (0.51–0.75 cm/hr)</option>
+                            <option value="0.76">Heavy Rain (0.76–1.5 cm/hr)</option>
+                            <option value="2.0">Very Heavy Rain (2.0+ cm/hr)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="time">Rain Duration (hours)</label>
+                        <input type="number" id="time" min="0.1" step="0.1" placeholder="e.g., 2.5" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="runoff">Surface Type (Runoff Coefficient)</label>
+                        <select id="runoff" required>
+                            <option value="">Select surface type...</option>
+                            <option value="0.2">Forest/Natural Soil (0.2)</option>
+                            <option value="0.3">Grassland/Parks (0.3)</option>
+                            <option value="0.4">Agricultural Land (0.4)</option>
+                            <option value="0.6">Suburban Areas (0.6)</option>
+                            <option value="0.875">Urban/Paved Areas (0.875)</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="calculate-btn">Calculate Flood Height</button>
+                </form>
                 
-                <div class="form-group" style="animation-delay: 0.4s;">
-                    <label for="runoff">Surface Type (Runoff Coefficient):</label>
-                    <select id="runoff" required>
-                        <option value="">Select surface type...</option>
-                        <option value="0.2">Forest/Natural Soil (0.2)</option>
-                        <option value="0.3">Grassland/Parks (0.3)</option>
-                        <option value="0.4">Agricultural Land (0.4)</option>
-                        <option value="0.6">Suburban Areas (0.6)</option>
-                        <option value="0.875">Urban/Paved Areas (0.875)</option>
-                    </select>
-                </div>
-                
-                <button type="submit" class="calculate-btn" style="animation: fadeIn 0.5s ease-out 0.5s both;">Calculate Flood Height</button>
-            </form>
+                <div id="flood-result" class="result"></div>
+            </div>
             
-            <div id="flood-result" class="result"></div>
-        </div>
-        
-        <div class="info-section" style="animation-delay: 0.6s;">
-            <h3>⚠️ Important Notes</h3>
-            <ul>
-                <li>This is an <strong>estimate</strong> - actual conditions may vary significantly</li>
-                <li>Local drainage, topography, and infrastructure affect real flood levels</li>
-                <li>Always follow official evacuation orders and emergency guidance</li>
-                <li>For immediate emergencies, call <strong>911</strong></li>
-            </ul>
-        </div>
-
-        <div class="navigation" style="animation: fadeIn 0.5s ease-out 0.7s both;">
-            <a href="/" class="nav-link">Back to Home</a>
-        </div>
-    </main>
-
-    <button id="toggleChatBtn" aria-label="Toggle chat">💬</button>
-    <div id="chatWidget" class="minimized">
-        <div id="chatHeader">
-            <span>FloodEvac Assistant</span>
-            <button id="chatMinimizeBtn" aria-label="Minimize chat">⌃</button>
-        </div>
-        <div id="chatBox">
-            <div class="message ai-message">
-                <strong>FloodEvac Assistant:</strong> Hello! I can help you understand flood risks and evacuation planning. Ask me anything!
+            <div class="warning-section">
+                <h3>⚠️ Important Notes</h3>
+                <ul>
+                    <li>This is an <strong>estimate</strong> - actual conditions may vary significantly</li>
+                    <li>Local drainage, topography, and infrastructure affect real flood levels</li>
+                    <li>Always follow official evacuation orders and emergency guidance</li>
+                    <li>For immediate emergencies, call <strong>911</strong></li>
+                </ul>
             </div>
         </div>
-        <div class="chat-input-container">
-            <input type="text" id="promptInput" placeholder="Ask about flood safety..." />
-            <button id="sendBtn">Send</button>
+        
+        <div class="navigation">
+            <a href="/" class="nav-link">
+                <span>🏠</span> Home
+            </a>
+            <a href="/map" class="nav-link">
+                <span>🗺️</span> Interactive Map
+            </a>
         </div>
     </div>
 
     <script>
-        const chatBox = document.getElementById('chatBox');
-        const promptInput = document.getElementById('promptInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const chatWidget = document.getElementById('chatWidget');
-        const toggleChatBtn = document.getElementById('toggleChatBtn');
-        const chatMinimizeBtn = document.getElementById('chatMinimizeBtn');
-        let isChatMinimized = true;
-
-        function toggleChat() {
-            if (isChatMinimized) {
-                chatWidget.classList.remove('minimized');
-                chatWidget.classList.add('maximized');
-                toggleChatBtn.innerHTML = '⌄';
-                chatMinimizeBtn.innerHTML = '⌃';
-            } else {
-                chatWidget.classList.remove('maximized');
-                chatWidget.classList.add('minimized');
-                toggleChatBtn.innerHTML = '💬';
-                chatMinimizeBtn.innerHTML = '⌃';
-            }
-            isChatMinimized = !isChatMinimized;
-        }
-
-        toggleChatBtn.addEventListener('click', toggleChat);
-        chatMinimizeBtn.addEventListener('click', () => {
-            if (!isChatMinimized) {
-                toggleChat();
-            }
-        });
-
-        function addMessage(message, isUser = false) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
-            messageDiv.innerHTML = `<strong>${isUser ? 'You' : 'FloodEvac Assistant'}:</strong> ${message}`;
-            chatBox.appendChild(messageDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function showLoading() {
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'message ai-message loading';
-            loadingDiv.id = 'loading';
-            loadingDiv.innerHTML = '<strong>FloodEvac Assistant:</strong> Thinking...';
-            chatBox.appendChild(loadingDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
-        function hideLoading() {
-            const loadingDiv = document.getElementById('loading');
-            if (loadingDiv) {
-                loadingDiv.remove();
-            }
-        }
-
-        async function sendMessage() {
-            const prompt = promptInput.value.trim();
-            if (!prompt) return;
-
-            addMessage(prompt, true);
-            promptInput.value = '';
-            sendBtn.disabled = true;
-            showLoading();
-
-            try {
-                const response = await fetch('/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ prompt: prompt })
-                });
-
-                const data = await response.json();
-                hideLoading();
-
-                if (data.status === 'success') {
-                    addMessage(data.response);
-                } else {
-                    addMessage('Sorry, I encountered an error. Please try again.');
-                }
-            } catch (error) {
-                hideLoading();
-                addMessage('Sorry, I encountered a network error. Please try again.');
-            }
-
-            sendBtn.disabled = false;
-        }
-
-        promptInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-
-        sendBtn.addEventListener('click', sendMessage);
-    </script>
-</body>
-    <script>
         document.getElementById('floodForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Get form values
             const intensity = parseFloat(document.getElementById('intensity').value);
             const time = parseFloat(document.getElementById('time').value);
             const runoff = parseFloat(document.getElementById('runoff').value);
             const resultDiv = document.getElementById('flood-result');
             
-            // Validate inputs
             if (isNaN(intensity) || isNaN(time) || isNaN(runoff) || 
                 intensity <= 0 || time <= 0 || runoff <= 0) {
-                resultDiv.textContent = 'Please enter valid values for all fields.';
+                resultDiv.innerHTML = `
+                    <div class="result-value">⚠️ Error</div>
+                    <div class="result-subtitle">Please enter valid values for all fields</div>
+                `;
                 resultDiv.className = 'result error';
                 resultDiv.style.display = 'block';
                 return;
             }
             
-            // Calculate flood height using the formula
             const height = (intensity * time * runoff) / 15;
             
-            // Display result
             resultDiv.innerHTML = `
-                <div style="font-size: 1.4em; margin-bottom: 0.5rem;">
-                    Estimated Flood Height: <strong>${height.toFixed(2)} meters</strong>
-                </div>
-                <div style="font-size: 0.9em; color: #666;">
-                    (${(height * 3.28084).toFixed(2)} feet)
-                </div>
+                <div class="result-value">${height.toFixed(2)} meters</div>
+                <div class="result-subtitle">${(height * 3.28084).toFixed(2)} feet</div>
             `;
             resultDiv.className = 'result';
             resultDiv.style.display = 'block';
             
-            // Scroll to result
             resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
     </script>
