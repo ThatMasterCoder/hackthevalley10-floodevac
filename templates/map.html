@@ -207,6 +207,124 @@
             padding: 20px;
         }
         
+        /* City Search Button - Bottom Left */
+        #city-search-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 1500;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        #city-search-btn:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.5);
+        }
+        
+        /* City Search Modal */
+        .city-modal-content {
+            background: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideDown 0.3s ease;
+            position: relative;
+        }
+        
+        .search-input-container {
+            position: relative;
+            margin-top: 20px;
+        }
+        
+        #city-input {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 1.1em;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        #city-input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        /* Dropdown suggestions */
+        #city-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .city-suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .city-suggestion-item:last-child {
+            border-bottom: none;
+        }
+        
+        .city-suggestion-item:hover {
+            background: #e3f2fd;
+        }
+        
+        .city-suggestion-item .city-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .city-suggestion-item .city-details {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-top: 2px;
+        }
+        
+        .no-results {
+            padding: 16px;
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+        
+        .loading-suggestions {
+            padding: 16px;
+            text-align: center;
+            color: #3498db;
+        }
+        
         /* ========================================
            ELEVATION LEGEND STYLING 
            Adjust padding, margin-top, margin-left, 
@@ -284,6 +402,30 @@
     </div>
 </div>
 
+<!-- City Search Button -->
+<button id="city-search-btn">
+    <span>📍</span> Enter Location
+</button>
+
+<!-- City Search Modal -->
+<div id="city-search-modal" class="modal">
+    <div class="city-modal-content">
+        <div class="modal-header">
+            <h2><span>📍</span> Search for a Location</h2>
+            <button class="close-btn" onclick="closeCitySearchModal()">&times;</button>
+        </div>
+        <div class="search-input-container">
+            <input 
+                type="text" 
+                id="city-input" 
+                placeholder="Type a location (i.e. Toronto; Alaska; Hong Kong etc...)" 
+                autocomplete="off"
+            />
+            <div id="city-suggestions"></div>
+        </div>
+    </div>
+</div>
+
 <!-- Disaster Info Modal -->
 <div id="disaster-modal" class="modal">
     <div class="modal-content">
@@ -319,9 +461,13 @@
     
     // Close modal when clicking outside of it
     window.onclick = function(event) {
-        const modal = document.getElementById('disaster-modal');
-        if (event.target == modal) {
+        const disasterModal = document.getElementById('disaster-modal');
+        const cityModal = document.getElementById('city-search-modal');
+        if (event.target == disasterModal) {
             closeDisasterModal();
+        }
+        if (event.target == cityModal) {
+            closeCitySearchModal();
         }
     }
     
@@ -329,11 +475,128 @@
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
             closeDisasterModal();
+            closeCitySearchModal();
         }
     });
     
     // Button click handler
     document.getElementById('disaster-btn').addEventListener('click', openDisasterModal);
+    
+    // City Search Modal Functions
+    function openCitySearchModal() {
+        document.getElementById('city-search-modal').style.display = 'block';
+        document.getElementById('city-input').focus();
+    }
+    
+    function closeCitySearchModal() {
+        document.getElementById('city-search-modal').style.display = 'none';
+        document.getElementById('city-input').value = '';
+        document.getElementById('city-suggestions').style.display = 'none';
+        document.getElementById('city-suggestions').innerHTML = '';
+    }
+    
+    // City search button click handler
+    document.getElementById('city-search-btn').addEventListener('click', openCitySearchModal);
+    
+    // Debounce function for search input
+    let searchTimeout;
+    function debounce(func, delay) {
+        return function(...args) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+    
+    // Search for cities using Nominatim API
+    async function searchCities(query) {
+        if (query.length < 2) {
+            document.getElementById('city-suggestions').style.display = 'none';
+            return;
+        }
+        
+        const suggestionsDiv = document.getElementById('city-suggestions');
+        suggestionsDiv.innerHTML = '<div class="loading-suggestions">🔍 Searching...</div>';
+        suggestionsDiv.style.display = 'block';
+        
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=8&addressdetails=1`
+            );
+            const results = await response.json();
+            
+            if (results.length === 0) {
+                suggestionsDiv.innerHTML = '<div class="no-results">No locations found. Try a different name.</div>';
+                return;
+            }
+            
+            // Display results
+            suggestionsDiv.innerHTML = '';
+            results.forEach(result => {
+                const item = document.createElement('div');
+                item.className = 'city-suggestion-item';
+                
+                const displayName = result.display_name;
+                const parts = displayName.split(',');
+                const cityName = parts[0];
+                const details = parts.slice(1).join(',');
+                
+                item.innerHTML = `
+                    <div class="city-name">${cityName}</div>
+                    <div class="city-details">${details}</div>
+                `;
+                
+                item.addEventListener('click', () => {
+                    selectCity(result.lat, result.lon, displayName);
+                });
+                
+                suggestionsDiv.appendChild(item);
+            });
+        } catch (error) {
+            console.error('Error searching cities:', error);
+            suggestionsDiv.innerHTML = '<div class="no-results">Error searching. Please try again.</div>';
+        }
+    }
+    
+    // Select a city from dropdown
+    function selectCity(lat, lng, name) {
+        const latNum = parseFloat(lat);
+        const lngNum = parseFloat(lng);
+        
+        // Close the modal
+        closeCitySearchModal();
+        
+        // Pan and zoom to the location
+        map.setView([latNum, lngNum], 10, {
+            animate: true,
+            duration: 1
+        });
+        
+        // Simulate a click on the map at that location after a short delay
+        setTimeout(() => {
+            if (marker) map.removeLayer(marker);
+            marker = L.marker([latNum, lngNum]).addTo(map);
+            
+            setRegionName('Loading...');
+            
+            // Fetch elevation
+            fetch(`/elevation?lat=${latNum}&lng=${lngNum}`)
+                .then(res => res.json())
+                .then(data => {
+                    let elev = (data && data.results && data.results[0] && data.results[0].elevation !== undefined && data.results[0].elevation !== null) ? data.results[0].elevation : NaN;
+                    setElevation(elev, latNum, lngNum, 0);
+                })
+                .catch(() => setElevation('N/A', latNum, lngNum, 0));
+            
+            // Set region name and fetch disaster info
+            setRegionName(name.split(',')[0]);
+            fetchDisasterInfo(latNum, lngNum, name.split(',')[0]);
+        }, 500);
+    }
+    
+    // Add input event listener with debounce
+    document.getElementById('city-input').addEventListener('input', debounce(function(e) {
+        searchCities(e.target.value);
+    }, 300));
     
     function clearRoute() {
         // Clear the main route layer
