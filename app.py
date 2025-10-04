@@ -1,8 +1,9 @@
 from flask import Flask, jsonify, request, render_template
 import google.generativeai as genai
 import os
+import re
 from dotenv import load_dotenv
-from elevation import get_elevation  # Ensure this import is correct based on your project structure
+from methods import get_elevation, convert_markdown_to_html
 
 # Load environment variables from .env file
 load_dotenv()
@@ -18,7 +19,7 @@ model = genai.GenerativeModel('gemini-2.5-flash-lite')
 
 @app.route('/flood-height-calculator')
 def flood_height_calculator():
-    return render_template('index.html')
+    return render_template('flood-calculator.html')
 
 @app.route('/')
 def home():
@@ -53,8 +54,11 @@ def generate_response():
         
         # Check if response has text
         if hasattr(response, 'text') and response.text:
+            # Convert markdown formatting to HTML
+            formatted_response = convert_markdown_to_html(response.text)
+            
             return jsonify({
-                'response': response.text,
+                'response': formatted_response,
                 'status': 'success'
             })
         else:

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flood Height Calculator - FloodEvac</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .calculator-container {
+            background: #f9f9f9;
+            padding: 2rem;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            margin-bottom: 2rem;
+        }
+        
+        .calculator-container h2 {
+            color: #2a4d69;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group select:focus,
+        .form-group input:focus {
+            border-color: #667eea;
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            padding: 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .calculate-btn:hover {
+            background: #5a67d8;
+        }
+        
+        .calculate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #e8f4f8;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2a4d69;
+            text-align: center;
+            display: none;
+        }
+        
+        .result.error {
+            background: #fee;
+            border-color: #e53e3e;
+            color: #c53030;
+        }
+        
+        .info-section {
+            background: #f0f8ff;
+            padding: 1.5rem;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 2rem;
+        }
+        
+        .info-section h3 {
+            color: #2a4d69;
+            margin-bottom: 1rem;
+        }
+        
+        .info-section ul {
+            color: #333;
+            padding-left: 1.5rem;
+        }
+        
+        .info-section li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .navigation {
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .nav-link {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: #f8f9fa;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 8px;
+            margin: 0 0.5rem;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .nav-link:hover {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌊 Flood Height Calculator</h1>
+            <p>Estimate potential flood heights based on rainfall conditions</p>
+        </div>
+        
+        <div class="info-section">
+            <h3>ℹ️ How This Calculator Works</h3>
+            <ul>
+                <li><strong>Rainfall Intensity:</strong> How much rain falls per hour</li>
+                <li><strong>Rain Duration:</strong> How long the rain continues</li>
+                <li><strong>Runoff Coefficient:</strong> How much water flows off surfaces (vs. being absorbed)</li>
+                <li><strong>Formula:</strong> Flood Height = (Intensity × Duration × Runoff) ÷ 15</li>
+            </ul>
+        </div>
+        
+        <div class="calculator-container">
+            <h2>Calculate Flood Height</h2>
+            
+            <form id="floodForm">
+                <div class="form-group">
+                    <label for="intensity">Rainfall Intensity (cm/hr):</label>
+                    <select id="intensity" required>
+                        <option value="">Select intensity...</option>
+                        <option value="0.25">Light Rain (0.25–0.50 cm/hr)</option>
+                        <option value="0.51">Moderate Rain (0.51–0.75 cm/hr)</option>
+                        <option value="0.76">Heavy Rain (0.76–1.5 cm/hr)</option>
+                        <option value="2.0">Very Heavy Rain (2.0+ cm/hr)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="time">Rain Duration (hours):</label>
+                    <input type="number" id="time" min="0.1" step="0.1" placeholder="e.g., 2.5" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="runoff">Surface Type (Runoff Coefficient):</label>
+                    <select id="runoff" required>
+                        <option value="">Select surface type...</option>
+                        <option value="0.2">Forest/Natural Soil (0.2)</option>
+                        <option value="0.3">Grassland/Parks (0.3)</option>
+                        <option value="0.4">Agricultural Land (0.4)</option>
+                        <option value="0.6">Suburban Areas (0.6)</option>
+                        <option value="0.875">Urban/Paved Areas (0.875)</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="calculate-btn">Calculate Flood Height</button>
+            </form>
+            
+            <div id="flood-result" class="result"></div>
+        </div>
+        
+        <div class="info-section">
+            <h3>⚠️ Important Notes</h3>
+            <ul>
+                <li>This is an <strong>estimate</strong> - actual conditions may vary significantly</li>
+                <li>Local drainage, topography, and infrastructure affect real flood levels</li>
+                <li>Always follow official evacuation orders and emergency guidance</li>
+                <li>For immediate emergencies, call <strong>911</strong></li>
+            </ul>
+        </div>
+        
+        <div class="navigation">
+            <a href="/" class="nav-link">🏠 Home</a>
+            <a href="/map" class="nav-link">🗺️ Interactive Map</a>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('floodForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const intensity = parseFloat(document.getElementById('intensity').value);
+            const time = parseFloat(document.getElementById('time').value);
+            const runoff = parseFloat(document.getElementById('runoff').value);
+            const resultDiv = document.getElementById('flood-result');
+            
+            // Validate inputs
+            if (isNaN(intensity) || isNaN(time) || isNaN(runoff) || 
+                intensity <= 0 || time <= 0 || runoff <= 0) {
+                resultDiv.textContent = 'Please enter valid values for all fields.';
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                return;
+            }
+            
+            // Calculate flood height using the formula
+            const height = (intensity * time * runoff) / 15;
+            
+            // Display result
+            resultDiv.innerHTML = `
+                <div style="font-size: 1.4em; margin-bottom: 0.5rem;">
+                    Estimated Flood Height: <strong>${height.toFixed(2)} meters</strong>
+                </div>
+                <div style="font-size: 0.9em; color: #666;">
+                    (${(height * 3.28084).toFixed(2)} feet)
+                </div>
+            `;
+            resultDiv.className = 'result';
+            resultDiv.style.display = 'block';
+            
+            // Scroll to result
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
+    </script>
+</body>
+</html>
