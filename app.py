@@ -3,7 +3,7 @@ import google.generativeai as genai
 import os
 import re
 from dotenv import load_dotenv
-from methods import get_elevation, convert_markdown_to_html
+from methods import get_elevation, convert_markdown_to_html, get_recent_floods
 
 # Load environment variables from .env file
 load_dotenv()
@@ -28,6 +28,16 @@ def home():
 @app.route('/map')
 def map_view():
     return render_template('map.html')
+
+@app.route('/recent-floods')
+def recent_floods_page():
+    return render_template('recent-floods.html')
+
+@app.route('/api/recent-floods', methods=['GET'])
+def recent_floods_api():
+    """API endpoint to fetch recent flood data"""
+    flood_data = get_recent_floods()
+    return jsonify(flood_data)
 
 @app.route('/elevation', methods=['GET'])
 def elevation():
