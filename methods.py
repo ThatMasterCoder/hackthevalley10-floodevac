@@ -24,6 +24,8 @@ def get_elevation():
     # If all fail, return N/A
     return jsonify({"results": [{"elevation": None}]})
 
+
+# regular expressions lol i love regex (i hate it)
 def convert_markdown_to_html(text):
     """Convert basic markdown formatting to HTML"""
     # Convert **bold** to <strong>bold</strong>
