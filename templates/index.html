@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FloodEvac - Emergency Evacuation Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 90%;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .header h1 {
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+        }
+        
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .chat-container {
+            margin-bottom: 2rem;
+        }
+        
+        .chat-box {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            height: 300px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: #f9f9f9;
+            margin-bottom: 1rem;
+        }
+        
+        .message {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            border-radius: 8px;
+        }
+        
+        .user-message {
+            background: #667eea;
+            color: white;
+            margin-left: 20%;
+        }
+        
+        .ai-message {
+            background: #e8f4f8;
+            color: #333;
+            margin-right: 20%;
+            border-left: 4px solid #667eea;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        #promptInput {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        #promptInput:focus {
+            border-color: #667eea;
+        }
+        
+        #sendBtn {
+            padding: 0.75rem 1.5rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+        
+        #sendBtn:hover {
+            background: #5a67d8;
+        }
+        
+        #sendBtn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .emergency-info {
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .emergency-info h3 {
+            color: #c53030;
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌊 FloodEvac</h1>
+            <p>Your AI-powered flood evacuation assistant</p>
+        </div>
+        
+        <div class="emergency-info">
+            <h3>⚠️ Emergency Information</h3>
+            <p>If you're in immediate danger, call emergency services: <strong>911</strong></p>
+        </div>
+        
+        <div class="chat-container">
+            <div id="chatBox" class="chat-box">
+                <div class="message ai-message">
+                    <strong>FloodEvac Assistant:</strong> Hello! I'm here to help you with flood evacuation planning and emergency information. How can I assist you today?
+                </div>
+            </div>
+            
+            <div class="input-container">
+                <input type="text" id="promptInput" placeholder="Ask about evacuation routes, emergency supplies, safety tips..." />
+                <button id="sendBtn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chatBox');
+        const promptInput = document.getElementById('promptInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        function addMessage(message, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+            messageDiv.innerHTML = `<strong>${isUser ? 'You' : 'FloodEvac Assistant'}:</strong> ${message}`;
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function showLoading() {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'message ai-message loading';
+            loadingDiv.id = 'loading';
+            loadingDiv.innerHTML = '<strong>FloodEvac Assistant:</strong> Thinking...';
+            chatBox.appendChild(loadingDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function hideLoading() {
+            const loadingDiv = document.getElementById('loading');
+            if (loadingDiv) {
+                loadingDiv.remove();
+            }
+        }
+
+        async function sendMessage() {
+            const prompt = promptInput.value.trim();
+            if (!prompt) return;
+
+            // Add user message
+            addMessage(prompt, true);
+            promptInput.value = '';
+            sendBtn.disabled = true;
+            showLoading();
+
+            try {
+                const response = await fetch('/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                const data = await response.json();
+                hideLoading();
+
+                if (data.status === 'success') {
+                    addMessage(data.response);
+                } else {
+                    addMessage('Sorry, I encountered an error. Please try again.');
+                }
+            } catch (error) {
+                hideLoading();
+                addMessage('Sorry, I encountered a network error. Please try again.');
+            }
+
+            sendBtn.disabled = false;
+        }
+
+        sendBtn.addEventListener('click', sendMessage);
+        promptInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
