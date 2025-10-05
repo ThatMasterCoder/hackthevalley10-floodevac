@@ -1,6 +1,67 @@
 from flask import Flask, request, jsonify
-import requests, time, re
+import requests, time, re, json
 from datetime import datetime, timedelta
+import google.generativeai as genai
+import os
+
+# Configure Gemini API
+genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
+
+
+def estimate_flood_populations(floods):
+    """
+    Uses Gemini AI to estimate affected populations for floods with 'Unknown' values.
+    Makes a single bulk API call to process all unknowns at once.
+    """
+    # Filter floods with unknown populations
+    unknowns = [f for f in floods if f['affected_population'] == 'Unknown']
+    
+    if not unknowns:
+        return floods  # No estimation needed
+    
+    try:
+        # Build prompt with all unknown floods
+        prompt = """You are a disaster analysis expert. Based on the following flood events, estimate the affected population for each.
+Consider: location (country/region), flood severity level, and typical population densities.
+
+Provide estimates in this exact JSON format:
+{"estimates": [{"index": 0, "population": 15000}, {"index": 1, "population": 8500}, ...]}
+
+Flood events to estimate:
+"""
+        
+        for i, flood in enumerate(unknowns):
+            prompt += f"\n{i}. Location: {flood['country']}, {flood['name']}"
+            prompt += f"\n   Severity: {flood['severity']}"
+            prompt += f"\n   Date: {flood['date']}"
+        
+        # Make single Gemini API call
+        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        response = model.generate_content(prompt)
+        
+        # Parse JSON response
+        response_text = response.text.strip()
+        # Extract JSON from response (handle markdown code blocks)
+        if '```json' in response_text:
+            response_text = response_text.split('```json')[1].split('```')[0].strip()
+        elif '```' in response_text:
+            response_text = response_text.split('```')[1].split('```')[0].strip()
+            
+        estimates_data = json.loads(response_text)
+        estimates = estimates_data.get('estimates', [])
+        
+        # Apply estimates back to floods
+        for estimate in estimates:
+            idx = estimate.get('index')
+            population = estimate.get('population')
+            if idx is not None and idx < len(unknowns) and population:
+                unknowns[idx]['affected_population'] = f"~{population:,} (estimated)"
+                
+    except Exception as e:
+        print(f"Error estimating populations: {e}")
+        # If estimation fails, floods keep 'Unknown' values
+    
+    return floods
 
 
 def get_severity_label(severity):
@@ -89,10 +150,14 @@ def get_recent_floods():
             # Sort floods by date in descending order (most recent first)
             floods.sort(key=lambda x: x['date'] if x['date'] != 'Unknown date' else '', reverse=True)
             
+            # Use Gemini to estimate unknown populations (single API call for all)
+            floods = estimate_flood_populations(floods)
+            
             return {
                 'status': 'success',
                 'count': len(floods),
-                'floods': floods
+                'floods': floods,
+                'has_unknown_populations': any(f['affected_population'] == 'Unknown' for f in floods)
             }
         else:
             return {
