@@ -459,26 +459,32 @@
         }
         
         .navigation {
-            text-align: center;
-            margin-top: 2.5rem;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
         }
         
         .nav-link {
-            display: inline-block;
-            padding: 1rem 2rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
             background: #003049;
             color: white;
             text-decoration: none;
             border-radius: 10px;
-            margin: 0 0.5rem;
             transition: all 0.3s ease;
-            font-weight: 500;
-            font-size: 1.1rem;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
         }
         
         .nav-link:hover {
             background: #00436a;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+            color: white;
         }
         
         @keyframes fadeIn {
@@ -570,11 +576,13 @@
                 <li>For immediate emergencies, call <strong>911</strong></li>
             </ul>
         </div>
-
-        <div class="navigation" style="animation: fadeIn 0.5s ease-out 0.7s both;">
-            <a href="/" class="nav-link">Back to Home</a>
-        </div>
     </main>
+
+    <div class="navigation" style="animation: fadeIn 0.5s ease-out 0.7s both;">
+        <a href="/" class="nav-link">
+            <span>←</span> Back to Home
+        </a>
+    </div>
 
     <button id="toggleChatBtn" aria-label="Toggle chat">💬</button>
     <div id="chatWidget" class="minimized">
