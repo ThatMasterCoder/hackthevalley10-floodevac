@@ -453,6 +453,18 @@
     var routeLayers = []; // Array to track multiple route layers
     var currentDisasterInfo = null; // Store disaster info
     
+    // Check for URL parameters to navigate to specific location
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlLat = urlParams.get('lat');
+    const urlLng = urlParams.get('lng');
+    
+    if (urlLat && urlLng) {
+        // Wait for map to be ready, then navigate to the coordinates
+        setTimeout(() => {
+            selectCity(urlLat, urlLng, 'Selected Location');
+        }, 500);
+    }
+    
     function openDisasterModal() {
         document.getElementById('disaster-modal').style.display = 'block';
     }
